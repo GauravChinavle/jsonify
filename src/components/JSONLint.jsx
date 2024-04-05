@@ -38,7 +38,7 @@ function JSONLint() {
 
     function getJSON(stringToJSON) {
         let json = stringToJSON;
-
+        console.log("hello-", stringToJSON);
         if (stringToJSON.includes('\\')) {
             const str = stringToJSON.replaceAll("\\", "");
             const obj1 = parseJSON(str);
@@ -47,6 +47,7 @@ function JSONLint() {
         }
 
         if (isJSON(stringToJSON)) {
+            console.log("here in is JSON");
             const obj1 = parseJSON(stringToJSON);
             if (typeof obj1 === "object")
                 return stringifyJSON(obj1);
@@ -55,12 +56,10 @@ function JSONLint() {
         if (/^\{(?:[^:]+:[^,]+,?)+\}$/.test(stringToJSON)) {
             let jsonObject = {};
             try {
-                const keyValuePairs = stringToJSON.substring(1, stringToJSON.length - 1).split(',');
-                keyValuePairs.forEach(pair => {
-                    const [key, value] = pair.trim().split(':');
-                    jsonObject[key.trim()] = value.trim().replace(/'/g, ''); // Replace single quotes with nothing
-                });
+                const jsonString = stringToJSON.replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":').replace(/'/g, '"');
+                jsonObject = JSON.parse(jsonString);
             } catch (e) {
+                console.log(e);
                 jsonObject = null;
                 setError("Invalid javascript object");
                 return stringToJSON;
