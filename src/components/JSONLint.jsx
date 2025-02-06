@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FaRegCopy } from "react-icons/fa";
 import { TiTick } from "react-icons/ti";
+import { jsonrepair } from "jsonrepair";
 
 function JSONLint() {
     const [value, setValue] = useState("");
@@ -10,64 +11,14 @@ function JSONLint() {
     const [indentSpacing, setIndentSpacing] = useState(' '.repeat(2));
     const [numberOfSpaces, setNumberOfSpaces] = useState(2);
 
-    function parseJSON(jsonToParse) {
-        try {
-            return JSON.parse(jsonToParse)
-        } catch (e) {
-            console.log("error while parsing");
-            setError(e.message);
-        }
-    }
-
     function stringifyJSON(jsonToStringify) {
         try {
+            console.log(jsonToStringify)
             return JSON.stringify(jsonToStringify, null, indentSpacing);
         } catch (e) {
             console.log("error while stringifying");
             setError(e.message);
         }
-    }
-
-    function isJSON(str) {
-        try {
-            return (JSON.parse(str) && !!str);
-        } catch (e) {
-            return false;
-        }
-    }
-
-    function getJSON(stringToJSON) {
-        let json = stringToJSON;
-        console.log("hello-", stringToJSON);
-        if (stringToJSON.includes('\\')) {
-            const str = stringToJSON.replaceAll("\\", "");
-            const obj1 = parseJSON(str);
-            if (typeof obj1 === "object")
-                return stringifyJSON(obj1);
-        }
-
-        if (isJSON(stringToJSON)) {
-            console.log("here in is JSON");
-            const obj1 = parseJSON(stringToJSON);
-            if (typeof obj1 === "object")
-                return stringifyJSON(obj1);
-        }
-
-        if (/^\{(?:[^:]+:[^,]+,?)+\}$/.test(stringToJSON)) {
-            let jsonObject = {};
-            try {
-                const jsonString = stringToJSON.replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":').replace(/'/g, '"');
-                jsonObject = JSON.parse(jsonString);
-            } catch (e) {
-                console.log(e);
-                jsonObject = null;
-                setError("Invalid javascript object");
-                return stringToJSON;
-            }
-            if (typeof jsonObject === "object")
-                return stringifyJSON(jsonObject);
-        }
-        return json;
     }
 
     function handleOnChange(event) {
@@ -79,7 +30,8 @@ function JSONLint() {
             setValue(event.target.value);
         }
         if (isNew) {
-            setValue(getJSON(event.target.value.trim()))
+            const repairedJSON = jsonrepair(event.target.value.trim());
+            setValue(JSON.stringify(JSON.parse(repairedJSON), null, indentSpacing))
             setIsNew(false);
         } else {
             setValue(event.target.value)
@@ -87,8 +39,9 @@ function JSONLint() {
     }
 
     function handleOnClick() {
-        setError("")
-        setValue(getJSON(value));
+        setError("");
+        const repairedJSON = jsonrepair(value);
+        setValue(JSON.stringify(JSON.parse(repairedJSON), null, indentSpacing));
     }
 
     function handleInputOnChange(e) {
