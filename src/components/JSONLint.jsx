@@ -11,13 +11,23 @@ function JSONLint() {
     const [indentSpacing, setIndentSpacing] = useState(' '.repeat(2));
     const [numberOfSpaces, setNumberOfSpaces] = useState(2);
 
-    function stringifyJSON(jsonToStringify) {
+    function getJSON (str) {
+        let result = str.trim();
         try {
-            console.log(jsonToStringify)
-            return JSON.stringify(jsonToStringify, null, indentSpacing);
+            if (/[\\n\\t\\r\\b]/.test(str)) {
+                str = str.replace(/\\[nrtb]/g, "");
+            }
+            if (str.includes('\\"')) {
+                str = str.replaceAll("\\", "");
+            }
+
+            const repairedJSON = jsonrepair(str);
+            result = JSON.stringify(JSON.parse(repairedJSON), null, indentSpacing);
+            return result;
         } catch (e) {
-            console.log("error while stringifying");
+            console.log("error while stringifying", e.message);
             setError(e.message);
+            return result;
         }
     }
 
@@ -30,8 +40,8 @@ function JSONLint() {
             setValue(event.target.value);
         }
         if (isNew) {
-            const repairedJSON = jsonrepair(event.target.value.trim());
-            setValue(JSON.stringify(JSON.parse(repairedJSON), null, indentSpacing))
+            const result = getJSON(event.target.value);
+            setValue(result)
             setIsNew(false);
         } else {
             setValue(event.target.value)
@@ -40,8 +50,8 @@ function JSONLint() {
 
     function handleOnClick() {
         setError("");
-        const repairedJSON = jsonrepair(value);
-        setValue(JSON.stringify(JSON.parse(repairedJSON), null, indentSpacing));
+        const result = getJSON(value);
+        setValue(result);
     }
 
     function handleInputOnChange(e) {
